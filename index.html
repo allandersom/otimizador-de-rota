@@ -14,36 +14,28 @@
             padding: 20px;
         }
         .painel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: white; padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
         }
         .grid-motoristas {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 8px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px; margin-bottom: 20px; background: #e9ecef;
+            padding: 15px; border-radius: 8px;
         }
         .motorista-input {
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
+            background: white; padding: 10px; border-radius: 4px;
             border-left: 4px solid #17a2b8;
         }
-        .motorista-input label {
-            font-size: 14px;
-            color: #555;
-        }
+        .motorista-input label { font-size: 14px; color: #555; }
         .input-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input[type="number"] {
             width: 100%; padding: 8px; box-sizing: border-box;
             border: 1px solid #ccc; border-radius: 4px;
+        }
+        .destaque-apoio {
+            background-color: #fff3cd; border-left: 4px solid #ffc107;
+            padding: 15px; border-radius: 4px; margin-bottom: 20px;
         }
         button {
             background-color: #28a745; color: white; border: none;
@@ -67,21 +59,26 @@
 </head>
 <body>
 
-    <h1>🚚 Planejador de Rotas - Poliguindaste</h1>
+    <h1>🚚 Roteirizador Oficial - Poliguindastes</h1>
 
     <div class="painel">
         <h3>1. Configuração da Frota (Saída da Base)</h3>
-        <p style="font-size: 14px; color: #666;">Defina quantas caixas vazias cada caminhão está levando ao sair da garagem (Máximo recomendado: 4).</p>
-        <div id="areaMotoristas" class="grid-motoristas">
-            </div>
+        <p style="font-size: 14px; color: #666;">Defina quantas caixas vazias cada caminhão está levando ao sair (Máx: 4).</p>
+        <div id="areaMotoristas" class="grid-motoristas"></div>
 
-        <h3>2. Demanda Geral do Dia</h3>
+        <div class="destaque-apoio">
+            <label>📦 Caixas Vazias em Caminhões de Apoio (Reserva):</label>
+            <p style="font-size: 13px; color: #666; margin-top: 0;">Se um caminhão principal ficar sem caixa vazia na rota, ele puxa desse estoque de outros caminhões.</p>
+            <input type="number" id="qtdApoio" value="5" min="0">
+        </div>
+
+        <h3>2. Demanda do Dia na Obra</h3>
         <div class="input-group">
-            <label>Colocações (Apenas deixar 1 vazia na obra):</label>
+            <label>Colocações (Deixar 1 vazia na obra):</label>
             <input type="number" id="qtdColocacoes" value="6" min="0">
         </div>
         <div class="input-group">
-            <label>Retiradas (Apenas pegar 1 cheia na obra):</label>
+            <label>Retiradas (Pegar 1 cheia na obra):</label>
             <input type="number" id="qtdRetiradas" value="8" min="0">
         </div>
         <div class="input-group">
@@ -89,32 +86,32 @@
             <input type="number" id="qtdTrocas" value="4" min="0">
         </div>
         
-        <button onclick="rodarSistema()">Roteirizar e Distribuir Tarefas</button>
+        <button onclick="rodarSistema()">Gerar Rotas e Distribuir</button>
     </div>
 
     <div id="areaAlertas" class="alertas"></div>
     <div id="resultadoFrota"></div>
 
     <script>
-        // Cadastro dos motoristas e placas
+        // Mapeamento Exato dos Motoristas e Placas
         const motoristasBase = [
-            { placa: 'BWU5G46', nome: 'ELCIDES' },
-            { placa: 'BYJ1E53', nome: 'MARCONI' },
-            { placa: 'CSE0H31', nome: 'MAYKEL' },
-            { placa: 'CSQ8E46', nome: 'LUIZ RODRIGO' },
-            { placa: 'PFB1495', nome: 'BRUNO' },
-            { placa: 'DKI6I07', nome: 'PLATINIS' }
+            { placa: 'GHA0I73', nome: 'ELCIDES' },
+            { placa: 'CSQ8E46', nome: 'MARCONI' },
+            { placa: 'BWU5G46', nome: 'MAYKEL' },
+            { placa: 'GFA9B22', nome: 'LUIZ RODRIGO' },
+            { placa: 'DKI6I07', nome: 'BRUNO' },
+            { placa: 'BYJ1E53', nome: 'PLATINIS' },
+            { placa: 'NMJ', nome: 'CLOVIS' }
         ];
 
-        // Assim que a página carrega, cria os campos para cada motorista
         window.onload = function() {
             let htmlMotoristas = '';
             motoristasBase.forEach((m, index) => {
                 htmlMotoristas += `
                     <div class="motorista-input">
                         <strong>👨‍✈️ ${m.nome}</strong> (${m.placa})
-                        <label style="margin-top: 8px;">Caixas Vazias Iniciais:</label>
-                        <input type="number" id="caixas_iniciais_${index}" value="3" min="0" max="4">
+                        <label style="margin-top: 8px;">Caixas Vazias:</label>
+                        <input type="number" id="caixas_iniciais_${index}" value="2" min="0" max="4">
                     </div>
                 `;
             });
@@ -129,25 +126,25 @@
                 this.caixas_cheias = 0;
                 this.viagens_usina = 0;
                 this.tarefas = { colocacoes: 0, retiradas: 0, trocas: 0 };
-                this.historico_rota = [`Saiu da base com ${vazias_iniciais} caixa(s) vazia(s)`];
+                this.historico_rota = [`📍 Saiu da base com ${vazias_iniciais} caixa(s) vazia(s)`];
             }
 
             espaco_livre() {
-                let espaco_ocupado = (this.caixas_vazias * 1) + (this.caixas_cheias * 2);
-                return 4 - espaco_ocupado;
+                return 4 - ((this.caixas_vazias * 1) + (this.caixas_cheias * 2));
             }
 
             descarregar_na_usina() {
                 if (this.caixas_cheias > 0) {
+                    let descarregadas = this.caixas_cheias;
                     this.caixas_cheias = 0;
+                    this.caixas_vazias += descarregadas; // As caixas esvaziadas ficam na caçamba
                     this.viagens_usina += 1;
-                    this.historico_rota.push("🏭 <b>Foi à Usina:</b> Descarregou as caixas cheias e liberou espaço na caçamba.");
+                    this.historico_rota.push(`🏭 <b>Foi à Usina:</b> Descartou resíduos e voltou com ${descarregadas} caixas vazias pra rota.`);
                 }
             }
 
             verificar_limite_usina() {
-                // Se chegou a 2 caixas cheias, é obrigado a ir na usina
-                if (this.caixas_cheias === 2) {
+                if (this.caixas_cheias >= 2) {
                     this.descarregar_na_usina();
                 }
             }
@@ -156,7 +153,7 @@
                 if (this.caixas_vazias >= 1) {
                     this.caixas_vazias -= 1;
                     this.tarefas.colocacoes += 1;
-                    this.historico_rota.push("⬇️ <b>Fez 1 Colocação:</b> Deixou uma caixa vazia na obra.");
+                    this.historico_rota.push("⬇️ <b>Fez 1 Colocação:</b> Deixou uma caixa vazia.");
                     return true;
                 }
                 return false;
@@ -166,8 +163,8 @@
                 if (this.espaco_livre() >= 2) {
                     this.caixas_cheias += 1;
                     this.tarefas.retiradas += 1;
-                    this.historico_rota.push("⬆️ <b>Fez 1 Retirada:</b> Recolheu uma caixa cheia da obra.");
-                    this.verificar_limite_usina(); // Checa se lotou
+                    this.historico_rota.push("⬆️ <b>Fez 1 Retirada:</b> Recolheu uma caixa cheia.");
+                    this.verificar_limite_usina();
                     return true;
                 }
                 return false;
@@ -178,8 +175,8 @@
                     this.caixas_vazias -= 1;
                     this.caixas_cheias += 1;
                     this.tarefas.trocas += 1;
-                    this.historico_rota.push("🔄 <b>Fez 1 Troca:</b> Deixou uma vazia e recolheu uma cheia no local.");
-                    this.verificar_limite_usina(); // Checa se lotou
+                    this.historico_rota.push("🔄 <b>Fez 1 Troca:</b> Deixou uma vazia e recolheu uma cheia.");
+                    this.verificar_limite_usina();
                     return true;
                 }
                 return false;
@@ -187,12 +184,11 @@
         }
 
         function rodarSistema() {
-            // Pegando as demandas
             let total_colocacoes = parseInt(document.getElementById('qtdColocacoes').value) || 0;
             let total_retiradas = parseInt(document.getElementById('qtdRetiradas').value) || 0;
             let total_trocas = parseInt(document.getElementById('qtdTrocas').value) || 0;
+            let caixas_apoio = parseInt(document.getElementById('qtdApoio').value) || 0;
 
-            // Lendo os inputs de configuração da frota na tela
             let frota = [];
             motoristasBase.forEach((m, index) => {
                 let vazias = parseInt(document.getElementById(`caixas_iniciais_${index}`).value) || 0;
@@ -201,83 +197,97 @@
 
             let alertasHTML = "";
 
-            // Lógica de Distribuição (1º Trocas, 2º Colocações, 3º Retiradas)
+            // 1. Lógica de Trocas (Prioridade)
             while (total_trocas > 0) {
                 let alocado = false;
-                for (let caminhao of frota) {
-                    if (total_trocas > 0 && caminhao.tentar_troca()) {
-                        total_trocas -= 1;
-                        alocado = true;
+                for (let c of frota) {
+                    if (total_trocas === 0) break;
+                    
+                    if (c.tentar_troca()) {
+                        total_trocas--; alocado = true;
+                    } 
+                    // Se não conseguiu trocar pq faltou caixa, mas tem Apoio e espaço livre suficiente
+                    else if (c.caixas_vazias === 0 && caixas_apoio > 0 && c.espaco_livre() >= 2) {
+                        caixas_apoio--;
+                        c.caixas_vazias++;
+                        c.historico_rota.push("🤝 <b>Apoio:</b> Pegou 1 vazia do caminhão reserva.");
+                        c.tentar_troca(); // Agora ele consegue
+                        total_trocas--; alocado = true;
                     }
                 }
                 if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou capacidade/caixa vazia para alocar ${total_trocas} trocas.</p>`;
+                    alertasHTML += `<p>⚠️ Faltou caminhão com capacidade ou caixas de apoio para alocar ${total_trocas} trocas.</p>`;
                     break;
                 }
             }
 
+            // 2. Lógica de Colocações
             while (total_colocacoes > 0) {
                 let alocado = false;
-                for (let caminhao of frota) {
-                    if (total_colocacoes > 0 && caminhao.tentar_colocacao()) {
-                        total_colocacoes -= 1;
-                        alocado = true;
+                for (let c of frota) {
+                    if (total_colocacoes === 0) break;
+                    
+                    if (c.tentar_colocacao()) {
+                        total_colocacoes--; alocado = true;
+                    } 
+                    // Se não conseguiu colocar pq faltou caixa, pega do apoio
+                    else if (c.caixas_vazias === 0 && caixas_apoio > 0 && c.espaco_livre() >= 1) {
+                        caixas_apoio--;
+                        c.caixas_vazias++;
+                        c.historico_rota.push("🤝 <b>Apoio:</b> Pegou 1 vazia do caminhão reserva.");
+                        c.tentar_colocacao(); // Agora ele consegue
+                        total_colocacoes--; alocado = true;
                     }
                 }
                 if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou caixa vazia na frota para alocar ${total_colocacoes} colocações.</p>`;
+                    alertasHTML += `<p>⚠️ Faltou caixas vazias (incluindo as de apoio) para alocar ${total_colocacoes} colocações.</p>`;
                     break;
                 }
             }
 
+            // 3. Lógica de Retiradas
             while (total_retiradas > 0) {
                 let alocado = false;
-                for (let caminhao of frota) {
-                    if (total_retiradas > 0 && caminhao.tentar_retirada()) {
-                        total_retiradas -= 1;
+                for (let c of frota) {
+                    if (total_retiradas > 0 && c.tentar_retirada()) {
+                        total_retiradas--;
                         alocado = true;
                     }
                 }
                 if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou espaço na frota para alocar ${total_retiradas} retiradas.</p>`;
+                    alertasHTML += `<p>⚠️ Faltou espaço na frota inteira para alocar ${total_retiradas} retiradas.</p>`;
                     break;
                 }
             }
 
             document.getElementById('areaAlertas').innerHTML = alertasHTML;
 
-            // Renderizando os relatórios com a Ordem Exata
-            let resultadoHTML = "<h2>📋 Relatório de Execução</h2>";
+            // Renderizando Relatório
+            let resultadoHTML = `<h2>📋 Relatório de Execução (Sobra no Apoio: ${caixas_apoio} vazias)</h2>`;
             for (let c of frota) {
-                
-                // Monta a lista do histórico passo a passo
                 let passosHTML = "";
-                if (c.historico_rota.length === 1) { // Se só tem a mensagem de saída da base
-                    passosHTML = "<li>Nenhum serviço alocado para este caminhão.</li>";
+                if (c.historico_rota.length === 1) { 
+                    passosHTML = "<li>Nenhum serviço extra alocado para este caminhão hoje.</li>";
                 } else {
                     c.historico_rota.push("🏁 <b>Fim do Expediente:</b> Retornou para a base.");
-                    for(let passo of c.historico_rota) {
-                        passosHTML += `<li>${passo}</li>`;
-                    }
+                    for(let passo of c.historico_rota) { passosHTML += `<li>${passo}</li>`; }
                 }
 
                 resultadoHTML += `
                     <div class="card-caminhao">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
-                            <strong>👨‍✈️ Motorista: ${c.motorista} (Placa: ${c.placa})</strong>
+                            <strong>👨‍✈️ ${c.motorista} (Placa: ${c.placa})</strong>
                             <span style="background: #e9ecef; padding: 5px 10px; border-radius: 12px; font-size: 14px;">
-                                Fim do dia: ${c.caixas_vazias} Vazias | ${c.caixas_cheias} Cheias
+                                Fim de rota: ${c.caixas_vazias} Vazias | ${c.caixas_cheias} Cheias
                             </span>
                         </div>
                         <div style="font-size: 15px;">
-                            <b>Total do Dia:</b> ${c.tarefas.colocacoes} Colocações | ${c.tarefas.retiradas} Retiradas | ${c.tarefas.trocas} Trocas
+                            <b>Total Feito:</b> ${c.tarefas.colocacoes} Colocações | ${c.tarefas.retiradas} Retiradas | ${c.tarefas.trocas} Trocas
                         </div>
                         
                         <div class="rota-passos">
                             <strong>Ordem Exata do Serviço:</strong>
-                            <ol>
-                                ${passosHTML}
-                            </ol>
+                            <ol>${passosHTML}</ol>
                         </div>
                     </div>
                 `;
