@@ -5,74 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Logístico - Rota de Poliguindastes</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .painel {
-            background: white; padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;
-        }
-        .grid-motoristas {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px; margin-bottom: 20px; background: #e9ecef;
-            padding: 15px; border-radius: 8px;
-        }
-        .motorista-input {
-            background: white; padding: 10px; border-radius: 4px;
-            border-left: 4px solid #17a2b8;
-        }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; }
+        .painel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .grid-motoristas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; background: #e9ecef; padding: 15px; border-radius: 8px; }
+        .motorista-input { background: white; padding: 10px; border-radius: 4px; border-left: 4px solid #17a2b8; }
         .motorista-input label { font-size: 14px; color: #555; }
         .input-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="number"] {
-            width: 100%; padding: 8px; box-sizing: border-box;
-            border: 1px solid #ccc; border-radius: 4px;
-        }
-        .destaque-apoio {
-            background-color: #fff3cd; border-left: 4px solid #ffc107;
-            padding: 15px; border-radius: 4px; margin-bottom: 20px;
-        }
-        button {
-            background-color: #28a745; color: white; border: none;
-            padding: 12px 20px; font-size: 16px; font-weight: bold;
-            border-radius: 4px; cursor: pointer; width: 100%;
-        }
+        input[type="number"] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #28a745; color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; width: 100%; }
         button:hover { background-color: #218838; }
-        .card-caminhao {
-            background: #fff; border-left: 5px solid #007bff;
-            padding: 15px; margin-bottom: 15px; border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .rota-passos {
-            margin-top: 10px; padding: 10px;
-            background: #f8f9fa; border-radius: 4px; font-size: 14px;
-        }
+        .card-caminhao { background: #fff; border-left: 5px solid #007bff; padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .rota-passos { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 14px; }
         .rota-passos ol { margin: 0; padding-left: 20px; color: #495057; }
         .rota-passos li { margin-bottom: 4px; }
-        .alertas { color: #dc3545; font-weight: bold; margin-bottom: 15px; }
+        .badge { background: #e9ecef; padding: 5px 10px; border-radius: 12px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <h1>🚚 Roteirizador Oficial - Poliguindastes</h1>
+    <h1>🚚 Roteirizador: Máximo Aproveitamento</h1>
 
     <div class="painel">
-        <h3>1. Configuração da Frota (Saída da Base)</h3>
-        <p style="font-size: 14px; color: #666;">Defina quantas caixas vazias cada caminhão está levando ao sair (Máx: 4).</p>
+        <h3>1. Saída do Pátio (Base/Usina)</h3>
+        <p style="font-size: 14px; color: #666;">Caixas vazias no início do dia (Máx: 4).</p>
         <div id="areaMotoristas" class="grid-motoristas"></div>
 
-        <div class="destaque-apoio">
-            <label>📦 Caixas Vazias em Caminhões de Apoio (Reserva):</label>
-            <p style="font-size: 13px; color: #666; margin-top: 0;">Se um caminhão principal ficar sem caixa vazia na rota, ele puxa desse estoque de outros caminhões.</p>
-            <input type="number" id="qtdApoio" value="5" min="0">
-        </div>
-
-        <h3>2. Demanda do Dia na Obra</h3>
+        <h3>2. Serviços do Dia na Rua</h3>
         <div class="input-group">
             <label>Colocações (Deixar 1 vazia na obra):</label>
             <input type="number" id="qtdColocacoes" value="6" min="0">
@@ -86,14 +45,12 @@
             <input type="number" id="qtdTrocas" value="4" min="0">
         </div>
         
-        <button onclick="rodarSistema()">Gerar Rotas e Distribuir</button>
+        <button onclick="rodarSistema()">Gerar Rotas Otimizadas</button>
     </div>
 
-    <div id="areaAlertas" class="alertas"></div>
     <div id="resultadoFrota"></div>
 
     <script>
-        // Mapeamento Exato dos Motoristas e Placas
         const motoristasBase = [
             { placa: 'GHA0I73', nome: 'ELCIDES' },
             { placa: 'CSQ8E46', nome: 'MARCONI' },
@@ -101,7 +58,7 @@
             { placa: 'GFA9B22', nome: 'LUIZ RODRIGO' },
             { placa: 'DKI6I07', nome: 'BRUNO' },
             { placa: 'BYJ1E53', nome: 'PLATINIS' },
-            { placa: 'NMJ', nome: 'CLOVIS' }
+            { placa: 'NMJ',     nome: 'CLOVIS' }
         ];
 
         window.onload = function() {
@@ -111,182 +68,195 @@
                     <div class="motorista-input">
                         <strong>👨‍✈️ ${m.nome}</strong> (${m.placa})
                         <label style="margin-top: 8px;">Caixas Vazias:</label>
-                        <input type="number" id="caixas_iniciais_${index}" value="2" min="0" max="4">
+                        <input type="number" id="caixas_iniciais_${index}" value="0" min="0" max="4">
                     </div>
                 `;
             });
             document.getElementById('areaMotoristas').innerHTML = htmlMotoristas;
         };
 
-        class CaminhaoPoliguindaste {
+        class Caminhao {
             constructor(placa, motorista, vazias_iniciais) {
                 this.placa = placa;
                 this.motorista = motorista;
                 this.caixas_vazias = vazias_iniciais;
                 this.caixas_cheias = 0;
-                this.viagens_usina = 0;
+                this.viagens_base = 0;
                 this.tarefas = { colocacoes: 0, retiradas: 0, trocas: 0 };
-                this.historico_rota = [`📍 Saiu da base com ${vazias_iniciais} caixa(s) vazia(s)`];
-            }
-
-            espaco_livre() {
-                return 4 - ((this.caixas_vazias * 1) + (this.caixas_cheias * 2));
-            }
-
-            descarregar_na_usina() {
-                if (this.caixas_cheias > 0) {
-                    let descarregadas = this.caixas_cheias;
-                    this.caixas_cheias = 0;
-                    this.caixas_vazias += descarregadas; // As caixas esvaziadas ficam na caçamba
-                    this.viagens_usina += 1;
-                    this.historico_rota.push(`🏭 <b>Foi à Usina:</b> Descartou resíduos e voltou com ${descarregadas} caixas vazias pra rota.`);
+                this.historico = [];
+                
+                if (vazias_iniciais > 0) {
+                    this.historico.push(`📍 Iniciou rota com ${vazias_iniciais} caixa(s) vazia(s).`);
+                } else {
+                    this.historico.push(`📍 Iniciou rota com a caçamba limpa.`);
                 }
+            }
+
+            total_servicos() {
+                return this.tarefas.colocacoes + this.tarefas.retiradas + this.tarefas.trocas;
+            }
+
+            // --- REGRAS DE FÍSICA E LIMITE DE MISTURA ---
+            pode_fazer_colocacao() {
+                return this.caixas_vazias >= 1;
+            }
+
+            pode_fazer_retirada() {
+                let v_final = this.caixas_vazias;
+                let c_final = this.caixas_cheias + 1;
+                if ((v_final * 1) + (c_final * 2) > 4) return false;
+                if (v_final > 1 && c_final > 0) return false; // Regra: Máx 1 Vazia e 1 Cheia
+                return true;
+            }
+
+            pode_fazer_troca() {
+                if (this.caixas_vazias < 1) return false;
+                let v_final = this.caixas_vazias - 1;
+                let c_final = this.caixas_cheias + 1;
+                if ((v_final * 1) + (c_final * 2) > 4) return false;
+                if (v_final > 1 && c_final > 0) return false; // Regra: Máx 1 Vazia e 1 Cheia
+                return true;
+            }
+
+            // --- EXECUÇÃO ---
+            fazer_colocacao() {
+                this.caixas_vazias--; this.tarefas.colocacoes++;
+                this.historico.push(`⬇️ Fez Colocação. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+            }
+
+            fazer_retirada() {
+                this.caixas_cheias++; this.tarefas.retiradas++;
+                this.historico.push(`⬆️ Fez Retirada. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+                this.verificar_limite_usina();
+            }
+
+            fazer_troca() {
+                this.caixas_vazias--; this.caixas_cheias++; this.tarefas.trocas++;
+                this.historico.push(`🔄 Fez Troca. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+                this.verificar_limite_usina();
             }
 
             verificar_limite_usina() {
+                // Se completou 2 cheias, obriga ir descarregar antes de aceitar novo chamado
                 if (this.caixas_cheias >= 2) {
-                    this.descarregar_na_usina();
+                    this.ir_para_base('descarte_obrigatorio');
                 }
             }
 
-            tentar_colocacao() {
-                if (this.caixas_vazias >= 1) {
-                    this.caixas_vazias -= 1;
-                    this.tarefas.colocacoes += 1;
-                    this.historico_rota.push("⬇️ <b>Fez 1 Colocação:</b> Deixou uma caixa vazia.");
-                    return true;
+            ir_para_base(motivo) {
+                let acoes = [];
+                if (this.caixas_cheias > 0) {
+                    acoes.push(`Descartou ${this.caixas_cheias} cheia(s)`);
+                    this.caixas_cheias = 0;
                 }
-                return false;
-            }
+                if (this.caixas_vazias > 0 && motivo !== 'descarte_obrigatorio') {
+                    acoes.push(`Devolveu excedente`);
+                    this.caixas_vazias = 0;
+                }
 
-            tentar_retirada() {
-                if (this.espaco_livre() >= 2) {
-                    this.caixas_cheias += 1;
-                    this.tarefas.retiradas += 1;
-                    this.historico_rota.push("⬆️ <b>Fez 1 Retirada:</b> Recolheu uma caixa cheia.");
-                    this.verificar_limite_usina();
-                    return true;
-                }
-                return false;
-            }
+                this.viagens_base++;
 
-            tentar_troca() {
-                if (this.caixas_vazias >= 1 && this.espaco_livre() >= 1) {
-                    this.caixas_vazias -= 1;
-                    this.caixas_cheias += 1;
-                    this.tarefas.trocas += 1;
-                    this.historico_rota.push("🔄 <b>Fez 1 Troca:</b> Deixou uma vazia e recolheu uma cheia.");
-                    this.verificar_limite_usina();
-                    return true;
+                // Otimização de Carga: Se ele foi chamado pra um serviço, já carrega o máximo que puder
+                if (motivo === 'troca') {
+                    this.caixas_vazias = 2; // Otimizado: Permite 1 troca exata e fica dentro do limite 1V+1C
+                    acoes.push(`Carregou 2 vazia(s)`);
+                } else if (motivo === 'colocacao') {
+                    this.caixas_vazias = 4; // Otimizado: Leva o máximo possível
+                    acoes.push(`Carregou 4 vazia(s)`);
+                } else if (motivo === 'retirada') {
+                    this.caixas_vazias = 0; // Sai zerado pra ter espaço
+                    acoes.push(`Saiu limpo`);
+                } else if (motivo === 'descarte_obrigatorio') {
+                    acoes.push(`Apenas esvaziou`);
                 }
-                return false;
+
+                this.historico.push(`🏭 <b>Pátio:</b> ${acoes.join(' | ')}.`);
             }
         }
 
         function rodarSistema() {
-            let total_colocacoes = parseInt(document.getElementById('qtdColocacoes').value) || 0;
-            let total_retiradas = parseInt(document.getElementById('qtdRetiradas').value) || 0;
-            let total_trocas = parseInt(document.getElementById('qtdTrocas').value) || 0;
-            let caixas_apoio = parseInt(document.getElementById('qtdApoio').value) || 0;
+            let total_C = parseInt(document.getElementById('qtdColocacoes').value) || 0;
+            let total_R = parseInt(document.getElementById('qtdRetiradas').value) || 0;
+            let total_T = parseInt(document.getElementById('qtdTrocas').value) || 0;
 
             let frota = [];
             motoristasBase.forEach((m, index) => {
                 let vazias = parseInt(document.getElementById(`caixas_iniciais_${index}`).value) || 0;
-                frota.push(new CaminhaoPoliguindaste(m.placa, m.nome, vazias));
+                frota.push(new Caminhao(m.placa, m.nome, vazias));
             });
 
-            let alertasHTML = "";
+            // Fila de Tarefas (Resolvemos as trocas primeiro, que são as mais chatas de encaixar)
+            let fila_tarefas = [];
+            for(let i=0; i<total_T; i++) fila_tarefas.push('troca');
+            for(let i=0; i<total_C; i++) fila_tarefas.push('colocacao');
+            for(let i=0; i<total_R; i++) fila_tarefas.push('retirada');
 
-            // 1. Lógica de Trocas (Prioridade)
-            while (total_trocas > 0) {
-                let alocado = false;
-                for (let c of frota) {
-                    if (total_trocas === 0) break;
+            while (fila_tarefas.length > 0) {
+                let tarefa = fila_tarefas.shift(); 
+                
+                // 1. Quem já está na rua e consegue fazer o serviço AGORA?
+                let candidatos_rua = frota.filter(c => {
+                    if (tarefa === 'troca') return c.pode_fazer_troca();
+                    if (tarefa === 'colocacao') return c.pode_fazer_colocacao();
+                    if (tarefa === 'retirada') return c.pode_fazer_retirada();
+                    return false;
+                });
+
+                if (candidatos_rua.length > 0) {
+                    // Ordena para que, entre os que podem fazer, o serviço vá pra quem trabalhou menos
+                    candidatos_rua.sort((a, b) => a.total_servicos() - b.total_servicos());
+                    let escolhido = candidatos_rua[0];
                     
-                    if (c.tentar_troca()) {
-                        total_trocas--; alocado = true;
-                    } 
-                    // Se não conseguiu trocar pq faltou caixa, mas tem Apoio e espaço livre suficiente
-                    else if (c.caixas_vazias === 0 && caixas_apoio > 0 && c.espaco_livre() >= 2) {
-                        caixas_apoio--;
-                        c.caixas_vazias++;
-                        c.historico_rota.push("🤝 <b>Apoio:</b> Pegou 1 vazia do caminhão reserva.");
-                        c.tentar_troca(); // Agora ele consegue
-                        total_trocas--; alocado = true;
-                    }
-                }
-                if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou caminhão com capacidade ou caixas de apoio para alocar ${total_trocas} trocas.</p>`;
-                    break;
-                }
-            }
-
-            // 2. Lógica de Colocações
-            while (total_colocacoes > 0) {
-                let alocado = false;
-                for (let c of frota) {
-                    if (total_colocacoes === 0) break;
-                    
-                    if (c.tentar_colocacao()) {
-                        total_colocacoes--; alocado = true;
-                    } 
-                    // Se não conseguiu colocar pq faltou caixa, pega do apoio
-                    else if (c.caixas_vazias === 0 && caixas_apoio > 0 && c.espaco_livre() >= 1) {
-                        caixas_apoio--;
-                        c.caixas_vazias++;
-                        c.historico_rota.push("🤝 <b>Apoio:</b> Pegou 1 vazia do caminhão reserva.");
-                        c.tentar_colocacao(); // Agora ele consegue
-                        total_colocacoes--; alocado = true;
-                    }
-                }
-                if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou caixas vazias (incluindo as de apoio) para alocar ${total_colocacoes} colocações.</p>`;
-                    break;
-                }
-            }
-
-            // 3. Lógica de Retiradas
-            while (total_retiradas > 0) {
-                let alocado = false;
-                for (let c of frota) {
-                    if (total_retiradas > 0 && c.tentar_retirada()) {
-                        total_retiradas--;
-                        alocado = true;
-                    }
-                }
-                if (!alocado) {
-                    alertasHTML += `<p>⚠️ Faltou espaço na frota inteira para alocar ${total_retiradas} retiradas.</p>`;
-                    break;
-                }
-            }
-
-            document.getElementById('areaAlertas').innerHTML = alertasHTML;
-
-            // Renderizando Relatório
-            let resultadoHTML = `<h2>📋 Relatório de Execução (Sobra no Apoio: ${caixas_apoio} vazias)</h2>`;
-            for (let c of frota) {
-                let passosHTML = "";
-                if (c.historico_rota.length === 1) { 
-                    passosHTML = "<li>Nenhum serviço extra alocado para este caminhão hoje.</li>";
+                    if (tarefa === 'troca') escolhido.fazer_troca();
+                    else if (tarefa === 'colocacao') escolhido.fazer_colocacao();
+                    else if (tarefa === 'retirada') escolhido.fazer_retirada();
                 } else {
-                    c.historico_rota.push("🏁 <b>Fim do Expediente:</b> Retornou para a base.");
-                    for(let passo of c.historico_rota) { passosHTML += `<li>${passo}</li>`; }
+                    // 2. Ninguém na rua tem caixa ou espaço para esse serviço. 
+                    // Pega o motorista que trabalhou menos no geral, manda no pátio se equipar.
+                    frota.sort((a, b) => a.total_servicos() - b.total_servicos());
+                    let escolhido = frota[0];
+                    
+                    escolhido.ir_para_base(tarefa);
+                    
+                    if (tarefa === 'troca') escolhido.fazer_troca();
+                    else if (tarefa === 'colocacao') escolhido.fazer_colocacao();
+                    else if (tarefa === 'retirada') escolhido.fazer_retirada();
                 }
+            }
+
+            // Exibição dos Relatórios
+            let resultadoHTML = `<h2>📋 Relatório Logístico - Aproveitamento de Rota</h2>`;
+            
+            // Ordena o resultado final pela quantidade de trabalho feito para facilitar a leitura
+            frota.sort((a, b) => b.total_servicos() - a.total_servicos());
+
+            for (let c of frota) {
+                if (c.caixas_cheias > 0 || c.caixas_vazias > 0) {
+                    c.historico.push(`🏁 <b>Fim do dia:</b> Voltou ao pátio e descarregou (${c.caixas_vazias}V, ${c.caixas_cheias}C).`);
+                } else if (c.historico.length > 1) {
+                    c.historico.push(`🏁 <b>Fim do dia:</b> Encerrou no pátio limpo.`);
+                } else {
+                    c.historico.push(`Nenhum serviço alocado (Folga).`);
+                }
+
+                let passosHTML = "";
+                for(let passo of c.historico) { passosHTML += `<li>${passo}</li>`; }
 
                 resultadoHTML += `
                     <div class="card-caminhao">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
                             <strong>👨‍✈️ ${c.motorista} (Placa: ${c.placa})</strong>
-                            <span style="background: #e9ecef; padding: 5px 10px; border-radius: 12px; font-size: 14px;">
-                                Fim de rota: ${c.caixas_vazias} Vazias | ${c.caixas_cheias} Cheias
-                            </span>
+                            <span class="badge">Idas ao Pátio: ${c.viagens_base}</span>
                         </div>
-                        <div style="font-size: 15px;">
-                            <b>Total Feito:</b> ${c.tarefas.colocacoes} Colocações | ${c.tarefas.retiradas} Retiradas | ${c.tarefas.trocas} Trocas
+                        <div style="font-size: 15px; margin-bottom: 10px;">
+                            <b>Total: ${c.total_servicos()} Serviços na Rua</b><br>
+                            <span style="color: #555; font-size: 13px;">
+                                (${c.tarefas.colocacoes} Colocações | ${c.tarefas.retiradas} Retiradas | ${c.tarefas.trocas} Trocas)
+                            </span>
                         </div>
                         
                         <div class="rota-passos">
-                            <strong>Ordem Exata do Serviço:</strong>
+                            <strong>Diário de Bordo:</strong>
                             <ol>${passosHTML}</ol>
                         </div>
                     </div>
