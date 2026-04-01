@@ -24,7 +24,7 @@
 </head>
 <body>
 
-    <h1>🚚 Roteirizador: Máximo Aproveitamento</h1>
+    <h1>🚚 Roteirizador: Lógica Real da Caçamba</h1>
 
     <div class="painel">
         <h3>1. Saída do Pátio (Base/Usina)</h3>
@@ -45,7 +45,7 @@
             <input type="number" id="qtdTrocas" value="4" min="0">
         </div>
         
-        <button onclick="rodarSistema()">Gerar Rotas Otimizadas</button>
+        <button onclick="rodarSistema()">Gerar Rotas</button>
     </div>
 
     <div id="resultadoFrota"></div>
@@ -64,11 +64,13 @@
         window.onload = function() {
             let htmlMotoristas = '';
             motoristasBase.forEach((m, index) => {
+                // Deixando o Elcides com 0 pra vc testar que ele VAI pra retirada e não pra base
+                let v = index === 0 ? 0 : (index === 1 ? 4 : 2); 
                 htmlMotoristas += `
                     <div class="motorista-input">
                         <strong>👨‍✈️ ${m.nome}</strong> (${m.placa})
                         <label style="margin-top: 8px;">Caixas Vazias:</label>
-                        <input type="number" id="caixas_iniciais_${index}" value="0" min="0" max="4">
+                        <input type="number" id="caixas_iniciais_${index}" value="${v}" min="0" max="4">
                     </div>
                 `;
             });
@@ -86,17 +88,15 @@
                 this.historico = [];
                 
                 if (vazias_iniciais > 0) {
-                    this.historico.push(`📍 Iniciou rota com ${vazias_iniciais} caixa(s) vazia(s).`);
+                    this.historico.push(`📍 Saiu do pátio com ${vazias_iniciais} vazia(s).`);
                 } else {
-                    this.historico.push(`📍 Iniciou rota com a caçamba limpa.`);
+                    this.historico.push(`📍 Saiu do pátio com a caçamba limpa.`);
                 }
             }
 
-            total_servicos() {
-                return this.tarefas.colocacoes + this.tarefas.retiradas + this.tarefas.trocas;
-            }
+            total_servicos() { return this.tarefas.colocacoes + this.tarefas.retiradas + this.tarefas.trocas; }
 
-            // --- REGRAS DE FÍSICA E LIMITE DE MISTURA ---
+            // FÍSICA DA CAÇAMBA: Olha pro que tem antes de aceitar serviço
             pode_fazer_colocacao() {
                 return this.caixas_vazias >= 1;
             }
@@ -104,8 +104,8 @@
             pode_fazer_retirada() {
                 let v_final = this.caixas_vazias;
                 let c_final = this.caixas_cheias + 1;
-                if ((v_final * 1) + (c_final * 2) > 4) return false;
-                if (v_final > 1 && c_final > 0) return false; // Regra: Máx 1 Vazia e 1 Cheia
+                if ((v_final * 1) + (c_final * 2) > 4) return false; // N passou de 4 slots
+                if (v_final > 1 && c_final > 0) return false; // Máx de mistura: 1V e 1C
                 return true;
             }
 
@@ -114,60 +114,58 @@
                 let v_final = this.caixas_vazias - 1;
                 let c_final = this.caixas_cheias + 1;
                 if ((v_final * 1) + (c_final * 2) > 4) return false;
-                if (v_final > 1 && c_final > 0) return false; // Regra: Máx 1 Vazia e 1 Cheia
+                if (v_final > 1 && c_final > 0) return false;
                 return true;
             }
 
-            // --- EXECUÇÃO ---
+            // EXECUÇÃO
             fazer_colocacao() {
                 this.caixas_vazias--; this.tarefas.colocacoes++;
-                this.historico.push(`⬇️ Fez Colocação. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+                this.historico.push(`⬇️ Colocação feita. [Ficou: ${this.caixas_vazias}V | ${this.caixas_cheias}C]`);
             }
 
             fazer_retirada() {
                 this.caixas_cheias++; this.tarefas.retiradas++;
-                this.historico.push(`⬆️ Fez Retirada. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+                this.historico.push(`⬆️ Retirada feita. [Ficou: ${this.caixas_vazias}V | ${this.caixas_cheias}C]`);
                 this.verificar_limite_usina();
             }
 
             fazer_troca() {
                 this.caixas_vazias--; this.caixas_cheias++; this.tarefas.trocas++;
-                this.historico.push(`🔄 Fez Troca. [Caçamba: ${this.caixas_vazias}V, ${this.caixas_cheias}C]`);
+                this.historico.push(`🔄 Troca feita. [Ficou: ${this.caixas_vazias}V | ${this.caixas_cheias}C]`);
                 this.verificar_limite_usina();
             }
 
             verificar_limite_usina() {
-                // Se completou 2 cheias, obriga ir descarregar antes de aceitar novo chamado
                 if (this.caixas_cheias >= 2) {
                     this.ir_para_base('descarte_obrigatorio');
                 }
             }
 
-            ir_para_base(motivo) {
+            ir_para_base(proxima_missao) {
                 let acoes = [];
                 if (this.caixas_cheias > 0) {
                     acoes.push(`Descartou ${this.caixas_cheias} cheia(s)`);
                     this.caixas_cheias = 0;
                 }
-                if (this.caixas_vazias > 0 && motivo !== 'descarte_obrigatorio') {
+                if (this.caixas_vazias > 0 && proxima_missao !== 'descarte_obrigatorio') {
                     acoes.push(`Devolveu excedente`);
                     this.caixas_vazias = 0;
                 }
 
                 this.viagens_base++;
 
-                // Otimização de Carga: Se ele foi chamado pra um serviço, já carrega o máximo que puder
-                if (motivo === 'troca') {
-                    this.caixas_vazias = 2; // Otimizado: Permite 1 troca exata e fica dentro do limite 1V+1C
-                    acoes.push(`Carregou 2 vazia(s)`);
-                } else if (motivo === 'colocacao') {
-                    this.caixas_vazias = 4; // Otimizado: Leva o máximo possível
-                    acoes.push(`Carregou 4 vazia(s)`);
-                } else if (motivo === 'retirada') {
-                    this.caixas_vazias = 0; // Sai zerado pra ter espaço
+                if (proxima_missao === 'troca') {
+                    this.caixas_vazias = 2; 
+                    acoes.push(`Carregou 2 vazias`);
+                } else if (proxima_missao === 'colocacao') {
+                    this.caixas_vazias = 4;
+                    acoes.push(`Carregou 4 vazias`);
+                } else if (proxima_missao === 'retirada') {
+                    this.caixas_vazias = 0;
                     acoes.push(`Saiu limpo`);
-                } else if (motivo === 'descarte_obrigatorio') {
-                    acoes.push(`Apenas esvaziou`);
+                } else if (proxima_missao === 'descarte_obrigatorio') {
+                    acoes.push(`Só esvaziou`);
                 }
 
                 this.historico.push(`🏭 <b>Pátio:</b> ${acoes.join(' | ')}.`);
@@ -185,58 +183,46 @@
                 frota.push(new Caminhao(m.placa, m.nome, vazias));
             });
 
-            // Fila de Tarefas (Resolvemos as trocas primeiro, que são as mais chatas de encaixar)
-            let fila_tarefas = [];
-            for(let i=0; i<total_T; i++) fila_tarefas.push('troca');
-            for(let i=0; i<total_C; i++) fila_tarefas.push('colocacao');
-            for(let i=0; i<total_R; i++) fila_tarefas.push('retirada');
+            let trava_seguranca = 0;
 
-            while (fila_tarefas.length > 0) {
-                let tarefa = fila_tarefas.shift(); 
-                
-                // 1. Quem já está na rua e consegue fazer o serviço AGORA?
-                let candidatos_rua = frota.filter(c => {
-                    if (tarefa === 'troca') return c.pode_fazer_troca();
-                    if (tarefa === 'colocacao') return c.pode_fazer_colocacao();
-                    if (tarefa === 'retirada') return c.pode_fazer_retirada();
-                    return false;
-                });
+            // Continua enquanto tiver serviço pra fazer
+            while ((total_C > 0 || total_R > 0 || total_T > 0) && trava_seguranca < 500) {
+                trava_seguranca++;
+                let fez_algo_na_rua = false;
 
-                if (candidatos_rua.length > 0) {
-                    // Ordena para que, entre os que podem fazer, o serviço vá pra quem trabalhou menos
-                    candidatos_rua.sort((a, b) => a.total_servicos() - b.total_servicos());
-                    let escolhido = candidatos_rua[0];
-                    
-                    if (tarefa === 'troca') escolhido.fazer_troca();
-                    else if (tarefa === 'colocacao') escolhido.fazer_colocacao();
-                    else if (tarefa === 'retirada') escolhido.fazer_retirada();
-                } else {
-                    // 2. Ninguém na rua tem caixa ou espaço para esse serviço. 
-                    // Pega o motorista que trabalhou menos no geral, manda no pátio se equipar.
-                    frota.sort((a, b) => a.total_servicos() - b.total_servicos());
-                    let escolhido = frota[0];
-                    
-                    escolhido.ir_para_base(tarefa);
-                    
-                    if (tarefa === 'troca') escolhido.fazer_troca();
-                    else if (tarefa === 'colocacao') escolhido.fazer_colocacao();
-                    else if (tarefa === 'retirada') escolhido.fazer_retirada();
+                // TENTA CASAR A TAREFA COM QUEM JÁ TEM A CAÇAMBA CERTA NA RUA
+                for (let c of frota) {
+                    if (total_T > 0 && c.pode_fazer_troca()) {
+                        c.fazer_troca(); total_T--; fez_algo_na_rua = true; continue; 
+                    }
+                    if (total_C > 0 && c.pode_fazer_colocacao()) {
+                        c.fazer_colocacao(); total_C--; fez_algo_na_rua = true; continue;
+                    }
+                    if (total_R > 0 && c.pode_fazer_retirada()) {
+                        c.fazer_retirada(); total_R--; fez_algo_na_rua = true; continue;
+                    }
+                }
+
+                // SÓ manda pro pátio se NINGUÉM na frota consegue fazer o que sobrou
+                if (!fez_algo_na_rua) {
+                    // Pega o cara que tá mais ocioso e manda resolver
+                    let frota_ordenada = [...frota].sort((a, b) => a.total_servicos() - b.total_servicos());
+                    let escolhido = frota_ordenada[0];
+
+                    if (total_T > 0) escolhido.ir_para_base('troca');
+                    else if (total_C > 0) escolhido.ir_para_base('colocacao');
+                    else if (total_R > 0) escolhido.ir_para_base('retirada');
                 }
             }
 
-            // Exibição dos Relatórios
-            let resultadoHTML = `<h2>📋 Relatório Logístico - Aproveitamento de Rota</h2>`;
-            
-            // Ordena o resultado final pela quantidade de trabalho feito para facilitar a leitura
-            frota.sort((a, b) => b.total_servicos() - a.total_servicos());
-
+            let resultadoHTML = `<h2>📋 Diário de Frota</h2>`;
             for (let c of frota) {
                 if (c.caixas_cheias > 0 || c.caixas_vazias > 0) {
-                    c.historico.push(`🏁 <b>Fim do dia:</b> Voltou ao pátio e descarregou (${c.caixas_vazias}V, ${c.caixas_cheias}C).`);
+                    c.historico.push(`🏁 <b>Fim do expediente:</b> Retornou pra base.`);
                 } else if (c.historico.length > 1) {
-                    c.historico.push(`🏁 <b>Fim do dia:</b> Encerrou no pátio limpo.`);
+                    c.historico.push(`🏁 <b>Fim do expediente:</b> Encerrou limpo.`);
                 } else {
-                    c.historico.push(`Nenhum serviço alocado (Folga).`);
+                    c.historico.push(`Sem chamados (Ficou no pátio).`);
                 }
 
                 let passosHTML = "";
@@ -245,18 +231,13 @@
                 resultadoHTML += `
                     <div class="card-caminhao">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
-                            <strong>👨‍✈️ ${c.motorista} (Placa: ${c.placa})</strong>
-                            <span class="badge">Idas ao Pátio: ${c.viagens_base}</span>
+                            <strong>👨‍✈️ ${c.motorista} (${c.placa})</strong>
+                            <span class="badge">Idas extras ao Pátio: ${c.viagens_base}</span>
                         </div>
                         <div style="font-size: 15px; margin-bottom: 10px;">
-                            <b>Total: ${c.total_servicos()} Serviços na Rua</b><br>
-                            <span style="color: #555; font-size: 13px;">
-                                (${c.tarefas.colocacoes} Colocações | ${c.tarefas.retiradas} Retiradas | ${c.tarefas.trocas} Trocas)
-                            </span>
+                            <b>Realizado:</b> ${c.tarefas.colocacoes} Coloc. | ${c.tarefas.retiradas} Retir. | ${c.tarefas.trocas} Trocas
                         </div>
-                        
                         <div class="rota-passos">
-                            <strong>Diário de Bordo:</strong>
                             <ol>${passosHTML}</ol>
                         </div>
                     </div>
